@@ -22,11 +22,8 @@ ProxyPool 爬虫代理IP池
 
 * 文档: [document](https://proxy-pool.readthedocs.io/zh/latest/) [![Documentation Status](https://readthedocs.org/projects/proxy-pool/badge/?version=latest)](https://proxy-pool.readthedocs.io/zh/latest/?badge=latest)
 
-* 支持版本: 
-[![](https://img.shields.io/badge/Python-3.8-blue.svg)](https://docs.python.org/3.8/)
-[![](https://img.shields.io/badge/Python-3.9-blue.svg)](https://docs.python.org/3.9/)
-[![](https://img.shields.io/badge/Python-3.10-blue.svg)](https://docs.python.org/3.10/)
-[![](https://img.shields.io/badge/Python-3.11-blue.svg)](https://docs.python.org/3.11/)
+* 支持版本:
+[![](https://img.shields.io/badge/Python-3.13-blue.svg)](https://docs.python.org/3.13/)
 
 * 测试地址: http://demo.spiderpy.cn (勿压谢谢)
 
@@ -57,6 +54,7 @@ https://github.com/jhao104/proxy_pool/releases 下载对应zip文件
 ##### 安装依赖:
 
 ```bash
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
@@ -66,10 +64,20 @@ pip install -r requirements.txt
 ```python
 # setting.py 为项目配置文件
 
-# 配置API服务
+# 配置 API 服务
 
 HOST = "0.0.0.0"               # IP
-PORT = 5000                    # 监听端口
+PORT = 5010                    # 监听端口
+
+
+# 配置 SOCKS5 服务
+
+SOCKS5_ENABLE = True           # 启动 server 时是否同时启动 SOCKS5 服务
+SOCKS5_HOST = "0.0.0.0"        # SOCKS5 监听地址
+SOCKS5_PORT = 1080             # SOCKS5 监听端口
+SOCKS5_SCHEDULE = "rr"         # 上游代理调度策略, rr 为轮询
+SOCKS5_REFRESH_SECONDS = 60    # 代理池刷新间隔
+SOCKS5_HTTPS_ONLY = True       # 只使用支持 HTTPS 的代理作为上游
 
 
 # 配置数据库
@@ -89,14 +97,21 @@ PROXY_FETCHER = [
 #### 启动项目:
 
 ```bash
-# 如果已经具备运行条件, 可用通过proxyPool.py启动。
-# 程序分为: schedule 调度程序 和 server Api服务
+# 如果已经具备运行条件, 可通过 proxyPool.py 启动。
+# 程序分为 schedule 调度程序、server API/SOCKS5 服务。
 
 # 启动调度程序
 python proxyPool.py schedule
 
-# 启动webApi服务
+# 启动 API 服务，同时按配置启动 SOCKS5 服务
 python proxyPool.py server
+
+# 启动 API 服务，并通过 CLI 覆盖 SOCKS5 监听地址和端口
+python proxyPool.py server --socks5-host 0.0.0.0 --socks5-port 1080
+
+# 单独启动 SOCKS5 服务
+python proxyPool.py socks5
+python proxyPool.py socks5 --socks5-host 127.0.0.1 --socks5-port 1080
 
 ```
 
@@ -105,7 +120,13 @@ python proxyPool.py server
 ```bash
 docker pull jhao104/proxy_pool
 
-docker run --env DB_CONN=redis://:password@ip:port/0 -p 5010:5010 jhao104/proxy_pool:latest
+docker run \
+  --env DB_CONN=redis://:password@ip:port/0 \
+  --env SOCKS5_HOST=0.0.0.0 \
+  --env SOCKS5_PORT=1080 \
+  -p 5010:5010 \
+  -p 1080:1080 \
+  jhao104/proxy_pool:latest
 ```
 ### docker-compose
 
@@ -116,9 +137,9 @@ docker-compose up -d
 
 ### 使用
 
-* Api
+* API
 
-启动web服务后, 默认配置下会开启 http://127.0.0.1:5010 的api接口服务:
+启动 `server` 后，默认配置下会开启 `http://127.0.0.1:5010` 的 API 接口服务:
 
 | api | method | Description | params|
 | ----| ---- | ---- | ----|
@@ -129,6 +150,24 @@ docker-compose up -d
 | /count | GET | 查看代理数量 |None|
 | /delete | GET | 删除代理  |`?proxy=host:ip`|
 
+* SOCKS5
+
+启动 `server` 后，默认还会开启 `socks5://127.0.0.1:1080`。该服务由 `pproxy` 提供，会读取代理池中的代理作为 HTTP CONNECT 上游，并按 `SOCKS5_SCHEDULE` 配置轮询转发请求。
+
+SOCKS5 服务默认只使用 `https=True` 的代理作为上游，因为 SOCKS5 入口需要上游 HTTP 代理支持 CONNECT 才能稳定转发 HTTPS 和通用 TCP 流量。可以通过 `SOCKS5_HTTPS_ONLY=False` 关闭该过滤。
+
+CLI 参数优先级高于 `setting.py` 和环境变量:
+
+```bash
+python proxyPool.py server --socks5-host 0.0.0.0 --socks5-port 1080
+python proxyPool.py socks5 --socks5-host 127.0.0.1 --socks5-port 1080
+```
+
+使用示例:
+
+```bash
+curl --socks5-hostname 127.0.0.1:1080 https://httpbin.org/ip
+```
 
 * 爬虫使用
 

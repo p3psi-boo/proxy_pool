@@ -1,6 +1,6 @@
-FROM python:3.6-alpine
+FROM python:3.13-alpine
 
-MAINTAINER jhao104 <j_hao104@163.com>
+LABEL maintainer="jhao104 <j_hao104@163.com>"
 
 WORKDIR /app
 
@@ -19,6 +19,6 @@ RUN apk add musl-dev gcc libxml2-dev libxslt-dev && \
 
 COPY . .
 
-EXPOSE 5010
+EXPOSE 5010 1080
 
 ENTRYPOINT [ "sh", "start.sh" ]

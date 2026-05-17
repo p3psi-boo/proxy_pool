@@ -33,6 +33,30 @@ class ConfigHandler(withMetaclass(Singleton)):
         return os.environ.get("PORT", setting.PORT)
 
     @LazyProperty
+    def socks5Enable(self):
+        return self.__getBool("SOCKS5_ENABLE", setting.SOCKS5_ENABLE)
+
+    @LazyProperty
+    def socks5Host(self):
+        return os.getenv("SOCKS5_HOST", setting.SOCKS5_HOST)
+
+    @LazyProperty
+    def socks5Port(self):
+        return int(os.getenv("SOCKS5_PORT", setting.SOCKS5_PORT))
+
+    @LazyProperty
+    def socks5Schedule(self):
+        return os.getenv("SOCKS5_SCHEDULE", setting.SOCKS5_SCHEDULE)
+
+    @LazyProperty
+    def socks5RefreshSeconds(self):
+        return int(os.getenv("SOCKS5_REFRESH_SECONDS", setting.SOCKS5_REFRESH_SECONDS))
+
+    @LazyProperty
+    def socks5HttpsOnly(self):
+        return self.__getBool("SOCKS5_HTTPS_ONLY", setting.SOCKS5_HTTPS_ONLY)
+
+    @LazyProperty
     def dbConn(self):
         return os.getenv("DB_CONN", setting.DB_CONN)
 
@@ -81,3 +105,9 @@ class ConfigHandler(withMetaclass(Singleton)):
     def timezone(self):
         return os.getenv("TIMEZONE", setting.TIMEZONE)
 
+    @staticmethod
+    def __getBool(name, default):
+        value = os.getenv(name, default)
+        if isinstance(value, bool):
+            return value
+        return str(value).strip().lower() in ("1", "true", "yes", "on")

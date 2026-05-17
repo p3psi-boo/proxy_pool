@@ -32,6 +32,23 @@ HOST = "0.0.0.0"
 
 PORT = 5010
 
+# ############### socks5 server config ###############
+# Enable a socks5 entrypoint backed by proxies from the pool.
+SOCKS5_ENABLE = True
+
+SOCKS5_HOST = "0.0.0.0"
+
+SOCKS5_PORT = 1080
+
+# pproxy scheduling algorithm: rr(round_robin), rc(random_choice), fa(first_available), lc(least_connection)
+SOCKS5_SCHEDULE = "rr"
+
+# Reload proxy list periodically and update pproxy remote servers in process.
+SOCKS5_REFRESH_SECONDS = 60
+
+# HTTP upstream proxies must support CONNECT for generic socks5 tunneling.
+SOCKS5_HTTPS_ONLY = True
+
 # ############### database config ###################
 # db connection uri
 # example:

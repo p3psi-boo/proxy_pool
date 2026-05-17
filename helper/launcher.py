@@ -22,8 +22,16 @@ log = LogHandler('launcher')
 
 def startServer():
     __beforeStart()
+    from helper.socks5 import runSocks5
+    runSocks5()
     from api.proxyApi import runFlask
     runFlask()
+
+
+def startSocks5():
+    __beforeStart()
+    from helper.socks5 import runSocks5
+    runSocks5(block=True)
 
 
 def startScheduler():
@@ -49,6 +57,9 @@ def __showConfigure():
     conf = ConfigHandler()
     log.info("ProxyPool configure HOST: %s" % conf.serverHost)
     log.info("ProxyPool configure PORT: %s" % conf.serverPort)
+    log.info("ProxyPool configure SOCKS5_ENABLE: %s" % conf.socks5Enable)
+    log.info("ProxyPool configure SOCKS5_HOST: %s" % conf.socks5Host)
+    log.info("ProxyPool configure SOCKS5_PORT: %s" % conf.socks5Port)
     log.info("ProxyPool configure PROXY_FETCHER: %s" % conf.fetchers)
 
 
